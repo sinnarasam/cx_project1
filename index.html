@@ -506,6 +506,11 @@
                 </div>
             </div>
 
+            <div class="recommendations" style="background: #f8f9fa; padding: 30px; border-radius: 15px; margin-bottom: 30px;">
+                <h3 style="color: #333; margin-bottom: 15px;">📋 종합 평가</h3>
+                <div id="overallAssessment" style="color: #666; line-height: 1.8;"></div>
+            </div>
+
             <div class="chart-container">
                 <h3 style="text-align: center; margin-bottom: 20px;">카테고리별 성숙도 분석</h3>
                 <div class="chart-wrapper">
@@ -795,6 +800,9 @@
             // Display summary
             displaySummary(scores);
 
+            // Display overall assessment
+            displayOverallAssessment(scores);
+
             // Draw radar chart
             drawRadarChart(scores);
 
@@ -862,6 +870,50 @@
 
             document.getElementById('result-overall-score').textContent = scores.overall;
             document.getElementById('result-overall-level').textContent = getMaturityLevel(scores.overall);
+        }
+
+        function displayOverallAssessment(scores) {
+            const container = document.getElementById('overallAssessment');
+            const overallScore = parseFloat(scores.overall);
+            const cxScore = parseFloat(scores.cxTotal);
+            const dxScore = parseFloat(scores.dxTotal);
+            const level = getMaturityLevel(scores.overall);
+
+            let assessment = '';
+            let nextSteps = '';
+
+            // 성숙도 단계별 평가
+            if (overallScore >= 4.5) {
+                assessment = `<p><strong>축하합니다!</strong> 귀사는 CX/DX 분야에서 <strong>최고 수준의 성숙도</strong>를 보유하고 있습니다. 고객 경험과 디지털 전환이 조직 전반에 체계적으로 구축되어 있으며, 지속적인 최적화가 이루어지고 있습니다.</p>`;
+                nextSteps = `<p><strong>다음 단계:</strong> 업계 선도 기업으로서 혁신을 지속하고, 새로운 기술(생성형 AI, Web3 등)을 선제적으로 도입하며, 타 조직에 모범 사례를 공유하세요.</p>`;
+            } else if (overallScore >= 3.5) {
+                assessment = `<p><strong>우수합니다!</strong> 귀사는 CX/DX 분야에서 <strong>체계적인 관리 단계</strong>에 있습니다. 주요 프로세스가 표준화되어 있고, 성과 측정이 이루어지고 있습니다.</p>`;
+                nextSteps = `<p><strong>다음 단계:</strong> 데이터 기반 의사결정을 확대하고, AI/ML 활용을 강화하며, 조직 전반의 디지털 역량을 고도화하여 최적화 단계로 나아가세요.</p>`;
+            } else if (overallScore >= 2.5) {
+                assessment = `<p><strong>발전하고 있습니다.</strong> 귀사는 CX/DX 분야에서 <strong>정의 단계</strong>에 있습니다. 주요 프로세스가 문서화되기 시작했으며, 개선 활동이 진행 중입니다.</p>`;
+                nextSteps = `<p><strong>다음 단계:</strong> 표준 프로세스를 전사적으로 확산하고, 측정 체계를 구축하며, 디지털 도구 도입을 가속화하여 관리 단계로 발전하세요.</p>`;
+            } else if (overallScore >= 1.5) {
+                assessment = `<p><strong>시작 단계입니다.</strong> 귀사는 CX/DX 분야에서 <strong>발전 단계</strong>에 있습니다. 기본적인 체계가 마련되기 시작했으며, 개선의 필요성을 인식하고 있습니다.</p>`;
+                nextSteps = `<p><strong>다음 단계:</strong> 우선순위가 높은 영역부터 개선을 시작하고, 주요 프로세스를 정의·문서화하며, 전담 조직이나 책임자를 지정하여 정의 단계로 발전하세요.</p>`;
+            } else {
+                assessment = `<p><strong>개선 기회가 많습니다.</strong> 귀사는 CX/DX 분야에서 <strong>초기 단계</strong>에 있습니다. 체계적인 접근이 부족하지만, 이는 큰 개선 가능성을 의미합니다.</p>`;
+                nextSteps = `<p><strong>다음 단계:</strong> 경영진의 지원을 확보하고, 작은 프로젝트부터 시작하여 성공 사례를 만들며, 기본적인 데이터 수집과 고객 이해부터 시작하세요.</p>`;
+            }
+
+            // CX vs DX 비교 분석
+            let comparison = '';
+            const gap = Math.abs(cxScore - dxScore);
+            if (gap > 0.7) {
+                if (cxScore > dxScore) {
+                    comparison = `<p><strong>균형 분석:</strong> CX 성숙도(${cxScore})가 DX 성숙도(${dxScore})보다 높습니다. 고객 경험 관리는 잘하고 있지만, <strong>디지털 인프라와 기술 역량 강화가 필요</strong>합니다. 클라우드, 데이터 통합, 자동화 등에 투자하여 균형을 맞추세요.</p>`;
+                } else {
+                    comparison = `<p><strong>균형 분석:</strong> DX 성숙도(${dxScore})가 CX 성숙도(${cxScore})보다 높습니다. 기술 기반은 갖춰져 있지만, <strong>고객 중심 사고와 경험 관리 강화가 필요</strong>합니다. VOC 분석, 고객 여정 관리, 옴니채널 통합에 집중하세요.</p>`;
+                }
+            } else {
+                comparison = `<p><strong>균형 분석:</strong> CX 성숙도(${cxScore})와 DX 성숙도(${dxScore})가 균형있게 발전하고 있습니다. 이는 바람직한 상태이며, 양쪽 모두를 함께 발전시켜 나가세요.</p>`;
+            }
+
+            container.innerHTML = assessment + comparison + nextSteps;
         }
 
         function drawRadarChart(scores) {
