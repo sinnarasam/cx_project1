@@ -955,10 +955,10 @@
             const recommendations = [];
 
             // Find weak areas
-            const allScores = {
+            const allScores = [
                 ...assessmentData.cx.map(c => ({ ...c, type: 'CX', score: parseFloat(scores.cx[c.id]) })),
                 ...assessmentData.dx.map(c => ({ ...c, type: 'DX', score: parseFloat(scores.dx[c.id]) }))
-            };
+            ];
 
             const sortedScores = allScores.sort((a, b) => a.score - b.score);
             const weakAreas = sortedScores.slice(0, 3);
