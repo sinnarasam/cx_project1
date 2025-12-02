@@ -485,7 +485,8 @@
                 <p>귀사의 CX/DX 성숙도를 분석했습니다</p>
             </div>
 
-            <div class="summary-card">
+            <!-- 종합 성숙도 점수 카드는 숨김 처리 -->
+            <div class="summary-card" style="display: none;">
                 <h2 style="text-align: center; margin-bottom: 10px;">종합 성숙도</h2>
                 <div class="summary-grid">
                     <div class="summary-item">
@@ -518,7 +519,8 @@
                 </div>
             </div>
 
-            <div class="category-results" id="categoryResults"></div>
+            <!-- 카테고리별 점수 카드는 숨김 처리 -->
+            <div class="category-results" id="categoryResults" style="display: none;"></div>
 
             <div class="recommendations" id="recommendations"></div>
 
@@ -706,13 +708,17 @@
                 `;
             });
 
+            // Determine button text - only last question page should show "결과 확인"
+            const isLastQuestionPage = (pageIndex === 10); // 10th category (last page)
+            const buttonText = isLastQuestionPage ? '결과 확인 →' : '다음 →';
+
             html += `
                 <div class="error-message" id="error-${pageIndex}">
                     모든 질문에 답변해주세요.
                 </div>
                 <div class="nav-buttons">
                     ${pageIndex > 1 ? `<button class="btn btn-secondary" onclick="prevPage()">← 이전</button>` : ''}
-                    <button class="btn btn-primary" onclick="nextPage()">${pageIndex < totalPages - 1 ? '다음 →' : '결과 확인 →'}</button>
+                    <button class="btn btn-primary" onclick="nextPage()">${buttonText}</button>
                 </div>
             `;
 
