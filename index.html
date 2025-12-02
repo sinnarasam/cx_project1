@@ -1,0 +1,1073 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CX/DX 성숙도 진단</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            padding: 40px;
+            min-height: 600px;
+        }
+
+        /* Progress Bar */
+        .progress-container {
+            margin-bottom: 30px;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e0e0e0;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 10px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            transition: width 0.3s ease;
+            border-radius: 10px;
+        }
+
+        .progress-text {
+            text-align: center;
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        /* Page Styles */
+        .page {
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .page.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Intro Page */
+        .intro {
+            text-align: center;
+            padding: 40px 0;
+        }
+
+        .intro h1 {
+            font-size: 2.5em;
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        .intro-icon {
+            font-size: 5em;
+            margin-bottom: 20px;
+        }
+
+        .intro p {
+            color: #666;
+            font-size: 1.1em;
+            line-height: 1.8;
+            margin-bottom: 15px;
+        }
+
+        .intro-features {
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: 15px;
+            margin: 30px 0;
+            text-align: left;
+        }
+
+        .intro-features h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+        }
+
+        .intro-features ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .intro-features li {
+            padding: 10px 0;
+            padding-left: 30px;
+            position: relative;
+        }
+
+        .intro-features li:before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: #667eea;
+            font-weight: bold;
+        }
+
+        /* Question Page */
+        .category-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+        }
+
+        .category-header h2 {
+            font-size: 1.8em;
+            margin-bottom: 5px;
+        }
+
+        .category-header p {
+            opacity: 0.9;
+            font-size: 1em;
+        }
+
+        .question-card {
+            background: #f8f9fa;
+            padding: 25px;
+            margin-bottom: 25px;
+            border-radius: 15px;
+            border-left: 5px solid #667eea;
+        }
+
+        .question-number {
+            color: #667eea;
+            font-weight: bold;
+            font-size: 0.9em;
+            margin-bottom: 10px;
+        }
+
+        .question-text {
+            font-size: 1.15em;
+            color: #333;
+            margin-bottom: 20px;
+            font-weight: 500;
+            line-height: 1.6;
+        }
+
+        .rating-options {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .rating-option {
+            flex: 1;
+            min-width: 80px;
+        }
+
+        .rating-option input[type="radio"] {
+            display: none;
+        }
+
+        .rating-option label {
+            display: block;
+            padding: 15px;
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 500;
+        }
+
+        .rating-option input[type="radio"]:checked + label {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-color: #667eea;
+            transform: scale(1.05);
+        }
+
+        .rating-option label:hover {
+            border-color: #667eea;
+            transform: translateY(-2px);
+        }
+
+        .rating-description {
+            font-size: 0.85em;
+            color: #666;
+            margin-top: 15px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        /* Navigation Buttons */
+        .nav-buttons {
+            display: flex;
+            gap: 15px;
+            margin-top: 40px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #e0e0e0;
+            color: #666;
+        }
+
+        .btn-secondary:hover {
+            background: #d0d0d0;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn:disabled:hover {
+            transform: none;
+            box-shadow: none;
+        }
+
+        /* Results Page */
+        .results-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .results-header h1 {
+            font-size: 2.5em;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .results-header p {
+            color: #666;
+            font-size: 1.1em;
+        }
+
+        .chart-container {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .chart-wrapper {
+            position: relative;
+            height: 400px;
+            margin: 0 auto;
+        }
+
+        .category-results {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .category-card {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            padding: 20px;
+            border-radius: 15px;
+            border-left: 5px solid #667eea;
+        }
+
+        .category-card h3 {
+            color: #333;
+            font-size: 1.1em;
+            margin-bottom: 10px;
+        }
+
+        .category-score {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+
+        .category-level {
+            display: inline-block;
+            padding: 5px 15px;
+            background: white;
+            border-radius: 20px;
+            font-size: 0.9em;
+            color: #666;
+            font-weight: 500;
+        }
+
+        .summary-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+        }
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .summary-item {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 20px;
+            border-radius: 10px;
+            backdrop-filter: blur(10px);
+        }
+
+        .summary-item h4 {
+            font-size: 0.9em;
+            margin-bottom: 10px;
+            opacity: 0.9;
+        }
+
+        .summary-item .value {
+            font-size: 2.5em;
+            font-weight: bold;
+        }
+
+        .summary-item .level {
+            font-size: 0.9em;
+            margin-top: 5px;
+            opacity: 0.9;
+        }
+
+        .recommendations {
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: 15px;
+        }
+
+        .recommendations h3 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        .recommendation-item {
+            padding: 15px;
+            background: white;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            border-left: 4px solid #667eea;
+        }
+
+        .recommendation-item h4 {
+            color: #667eea;
+            margin-bottom: 8px;
+        }
+
+        .recommendation-item p {
+            color: #666;
+            line-height: 1.6;
+        }
+
+        /* Error Message */
+        .error-message {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            color: #856404;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 20px;
+            display: none;
+            text-align: center;
+        }
+
+        .error-message.show {
+            display: block;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+            }
+
+            .intro h1 {
+                font-size: 2em;
+            }
+
+            .rating-options {
+                flex-direction: column;
+            }
+
+            .rating-option {
+                min-width: 100%;
+            }
+
+            .chart-wrapper {
+                height: 300px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Progress Bar -->
+        <div class="progress-container" id="progressContainer" style="display: none;">
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+            <div class="progress-text" id="progressText"></div>
+        </div>
+
+        <!-- Intro Page -->
+        <div class="page active" id="page-intro">
+            <div class="intro">
+                <div class="intro-icon">🎯</div>
+                <h1>CX/DX 성숙도 진단</h1>
+                <p>귀사의 고객경험(CX)과 디지털전환(DX) 성숙도를 종합적으로 진단합니다.</p>
+
+                <div class="intro-features">
+                    <h3>📊 진단 구성</h3>
+                    <ul>
+                        <li><strong>CX 성숙도 (15문항)</strong>: 고객 이해, 여정 관리, 옴니채널, 데이터 활용, 조직 역량</li>
+                        <li><strong>DX 성숙도 (15문항)</strong>: 디지털 인프라, 데이터 관리, 자동화, AI 활용, 협업</li>
+                        <li><strong>소요 시간</strong>: 약 10~15분</li>
+                        <li><strong>결과 제공</strong>: 카테고리별 점수, 방사형 차트, 맞춤형 개선 제안</li>
+                    </ul>
+                </div>
+
+                <p style="margin-top: 20px;">각 문항을 솔직하게 평가해주시면, 현재 상태를 정확히 파악하고<br>실질적인 개선 방향을 제시해 드립니다.</p>
+
+                <div class="nav-buttons">
+                    <button class="btn btn-primary" onclick="startAssessment()">진단 시작하기 →</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Question Pages (Will be generated dynamically) -->
+        <div id="questionPages"></div>
+
+        <!-- Results Page -->
+        <div class="page" id="page-results">
+            <div class="results-header">
+                <h1>🎉 진단 결과</h1>
+                <p>귀사의 CX/DX 성숙도를 분석했습니다</p>
+            </div>
+
+            <!-- 종합 성숙도 점수 카드는 숨김 처리 -->
+            <div class="summary-card" style="display: none;">
+                <h2 style="text-align: center; margin-bottom: 10px;">종합 성숙도</h2>
+                <div class="summary-grid">
+                    <div class="summary-item">
+                        <h4>CX 성숙도</h4>
+                        <div class="value" id="result-cx-score">0</div>
+                        <div class="level" id="result-cx-level">-</div>
+                    </div>
+                    <div class="summary-item">
+                        <h4>DX 성숙도</h4>
+                        <div class="value" id="result-dx-score">0</div>
+                        <div class="level" id="result-dx-level">-</div>
+                    </div>
+                    <div class="summary-item">
+                        <h4>종합 평균</h4>
+                        <div class="value" id="result-overall-score">0</div>
+                        <div class="level" id="result-overall-level">-</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="recommendations" style="background: #f8f9fa; padding: 30px; border-radius: 15px; margin-bottom: 30px;">
+                <h3 style="color: #333; margin-bottom: 15px;">📋 종합 평가</h3>
+                <div id="overallAssessment" style="color: #666; line-height: 1.8;"></div>
+            </div>
+
+            <div class="chart-container">
+                <h3 style="text-align: center; margin-bottom: 20px;">카테고리별 성숙도 분석</h3>
+                <div class="chart-wrapper">
+                    <canvas id="radarChart"></canvas>
+                </div>
+            </div>
+
+            <!-- 카테고리별 점수 카드는 숨김 처리 -->
+            <div class="category-results" id="categoryResults" style="display: none;"></div>
+
+            <div class="recommendations" id="recommendations"></div>
+
+            <div class="nav-buttons">
+                <button class="btn btn-secondary" onclick="restartAssessment()">처음부터 다시하기</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Assessment data structure
+        const assessmentData = {
+            cx: [
+                {
+                    id: 'cx-insight',
+                    title: '고객 이해 및 인사이트',
+                    description: '고객의 니즈와 행동을 얼마나 깊이 이해하고 있는지 평가합니다',
+                    questions: [
+                        '우리 회사는 정기적으로 고객 조사를 실시하여 니즈와 불만을 파악합니다',
+                        '고객 페르소나(Persona)가 명확히 정의되어 있고 실무에 활용됩니다',
+                        '고객 행동 데이터를 분석하여 인사이트를 도출하고 의사결정에 반영합니다'
+                    ]
+                },
+                {
+                    id: 'cx-journey',
+                    title: '고객 여정 관리',
+                    description: '고객의 전체 경험 여정을 체계적으로 관리하는지 평가합니다',
+                    questions: [
+                        '주요 고객 여정 맵(Customer Journey Map)이 작성되어 있고 지속적으로 업데이트됩니다',
+                        '여정의 각 단계별로 고객 경험을 측정하고 개선 활동을 진행합니다',
+                        '터치포인트마다 일관된 브랜드 경험을 제공하기 위한 가이드라인이 있습니다'
+                    ]
+                },
+                {
+                    id: 'cx-omnichannel',
+                    title: '옴니채널 경험',
+                    description: '온·오프라인 통합 경험 제공 능력을 평가합니다',
+                    questions: [
+                        '온라인과 오프라인 채널 간 고객 정보와 이력이 실시간으로 연동됩니다',
+                        '고객이 어떤 채널을 사용하든 일관된 서비스 경험을 제공합니다',
+                        '채널 간 전환이 끊김없이(seamless) 이루어져 고객 편의성이 높습니다'
+                    ]
+                },
+                {
+                    id: 'cx-data',
+                    title: '고객 데이터 활용',
+                    description: 'VOC 및 고객 데이터의 수집과 활용 수준을 평가합니다',
+                    questions: [
+                        '다양한 채널의 고객 의견(VOC)을 체계적으로 수집하고 분류합니다',
+                        '수집된 VOC를 분석하여 실질적인 개선 과제를 도출합니다',
+                        '개선 과제의 실행 결과를 추적하고 효과를 측정합니다'
+                    ]
+                },
+                {
+                    id: 'cx-organization',
+                    title: 'CX 조직 역량',
+                    description: 'CX 전담 조직과 측정 체계의 성숙도를 평가합니다',
+                    questions: [
+                        'CX 개선을 전담하는 조직이나 담당자가 명확히 지정되어 있습니다',
+                        'NPS, CSAT 등 CX 핵심 지표(KPI)가 정의되어 있고 정기적으로 측정됩니다',
+                        '전 직원이 고객 중심 문화를 이해하고 실천하도록 교육과 평가가 이루어집니다'
+                    ]
+                }
+            ],
+            dx: [
+                {
+                    id: 'dx-infrastructure',
+                    title: '디지털 인프라',
+                    description: '디지털 전환을 위한 기술 기반의 구축 수준을 평가합니다',
+                    questions: [
+                        '클라우드 기반 시스템을 도입하여 유연하고 확장 가능한 인프라를 갖추고 있습니다',
+                        'API를 통한 시스템 간 연동이 원활하여 데이터 통합이 용이합니다',
+                        '모바일 환경에 최적화된 서비스와 업무 도구를 제공합니다'
+                    ]
+                },
+                {
+                    id: 'dx-data-mgmt',
+                    title: '데이터 관리 및 분석',
+                    description: '데이터 기반 의사결정을 위한 체계를 평가합니다',
+                    questions: [
+                        '고객, 영업, 운영 데이터가 통합 플랫폼(DW/Data Lake)에 체계적으로 저장됩니다',
+                        'BI 도구를 활용하여 실시간 대시보드로 주요 지표를 모니터링합니다',
+                        '데이터 기반 의사결정이 조직 문화로 자리잡고 있습니다'
+                    ]
+                },
+                {
+                    id: 'dx-automation',
+                    title: '프로세스 자동화',
+                    description: '업무 프로세스의 자동화 수준을 평가합니다',
+                    questions: [
+                        'RPA(로봇 프로세스 자동화)를 도입하여 반복적인 업무를 자동화했습니다',
+                        '챗봇, 이메일 자동화 등으로 고객 응대 효율성을 높였습니다',
+                        '워크플로우 자동화로 승인, 보고 등 내부 프로세스가 간소화되었습니다'
+                    ]
+                },
+                {
+                    id: 'dx-ai',
+                    title: 'AI/ML 활용',
+                    description: '인공지능과 머신러닝 기술의 도입 수준을 평가합니다',
+                    questions: [
+                        'AI 기반 추천 시스템으로 개인화된 상품/콘텐츠를 제공합니다',
+                        '머신러닝을 활용하여 수요 예측, 이탈 방지 등을 수행합니다',
+                        '자연어 처리(NLP) 기술로 고객 의견을 자동 분석하고 인사이트를 도출합니다'
+                    ]
+                },
+                {
+                    id: 'dx-collaboration',
+                    title: '디지털 협업',
+                    description: '디지털 도구를 활용한 협업 수준을 평가합니다',
+                    questions: [
+                        '협업 도구(Slack, Teams 등)로 부서 간 소통이 실시간으로 이루어집니다',
+                        '문서와 프로젝트를 클라우드에서 공동 작업하며 버전 관리가 체계적입니다',
+                        '원격 근무 환경이 구축되어 있고 생산성 저하 없이 운영됩니다'
+                    ]
+                }
+            ]
+        };
+
+        let currentPage = 0;
+        let totalPages = 0;
+        let answers = {};
+        let currentCategory = null;
+        let currentCategoryIndex = 0;
+
+        // Initialize
+        function init() {
+            generateQuestionPages();
+        }
+
+        function generateQuestionPages() {
+            const container = document.getElementById('questionPages');
+            let pageIndex = 1;
+
+            // CX Categories
+            assessmentData.cx.forEach((category, catIndex) => {
+                const pageDiv = createCategoryPage(category, 'cx', catIndex, pageIndex);
+                container.appendChild(pageDiv);
+                pageIndex++;
+            });
+
+            // DX Categories
+            assessmentData.dx.forEach((category, catIndex) => {
+                const pageDiv = createCategoryPage(category, 'dx', catIndex, pageIndex);
+                container.appendChild(pageDiv);
+                pageIndex++;
+            });
+
+            totalPages = pageIndex;
+        }
+
+        function createCategoryPage(category, type, catIndex, pageIndex) {
+            const pageDiv = document.createElement('div');
+            pageDiv.className = 'page';
+            pageDiv.id = `page-${pageIndex}`;
+
+            const typeLabel = type === 'cx' ? 'CX (Customer Experience)' : 'DX (Digital Transformation)';
+
+            let html = `
+                <div class="category-header">
+                    <h2>${category.title}</h2>
+                    <p>${category.description}</p>
+                </div>
+            `;
+
+            category.questions.forEach((question, qIndex) => {
+                const questionId = `${category.id}-q${qIndex}`;
+                html += `
+                    <div class="question-card">
+                        <div class="question-number">질문 ${qIndex + 1}/3</div>
+                        <div class="question-text">${question}</div>
+                        <div class="rating-options">
+                            ${[1, 2, 3, 4, 5].map(score => `
+                                <div class="rating-option">
+                                    <input type="radio" id="${questionId}-${score}" name="${questionId}" value="${score}">
+                                    <label for="${questionId}-${score}">${score}점</label>
+                                </div>
+                            `).join('')}
+                        </div>
+                        <div class="rating-description">
+                            <span>전혀 그렇지 않다</span>
+                            <span>보통이다</span>
+                            <span>매우 그렇다</span>
+                        </div>
+                    </div>
+                `;
+            });
+
+            // Determine button text - only last question page should show "결과 확인"
+            const isLastQuestionPage = (pageIndex === 10); // 10th category (last page)
+            const buttonText = isLastQuestionPage ? '결과 확인 →' : '다음 →';
+
+            html += `
+                <div class="error-message" id="error-${pageIndex}">
+                    모든 질문에 답변해주세요.
+                </div>
+                <div class="nav-buttons">
+                    ${pageIndex > 1 ? `<button class="btn btn-secondary" onclick="prevPage()">← 이전</button>` : ''}
+                    <button class="btn btn-primary" onclick="nextPage()">${buttonText}</button>
+                </div>
+            `;
+
+            pageDiv.innerHTML = html;
+            return pageDiv;
+        }
+
+        function startAssessment() {
+            currentPage = 1;
+            showPage(currentPage);
+            document.getElementById('progressContainer').style.display = 'block';
+            updateProgress();
+        }
+
+        function showPage(pageNum) {
+            document.querySelectorAll('.page').forEach(page => {
+                page.classList.remove('active');
+            });
+
+            const targetPage = pageNum === 0 ? 'page-intro' :
+                               pageNum === totalPages ? 'page-results' :
+                               `page-${pageNum}`;
+
+            document.getElementById(targetPage).classList.add('active');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function updateProgress() {
+            const progress = (currentPage / (totalPages - 1)) * 100;
+            document.getElementById('progressFill').style.width = progress + '%';
+            document.getElementById('progressText').textContent =
+                `진행률: ${Math.round(progress)}% (${currentPage}/${totalPages - 1})`;
+        }
+
+        function nextPage() {
+            // Validate current page
+            if (currentPage > 0 && currentPage < totalPages) {
+                const currentPageElement = document.getElementById(`page-${currentPage}`);
+                const radioGroups = currentPageElement.querySelectorAll('.question-card');
+                let allAnswered = true;
+
+                radioGroups.forEach(card => {
+                    const radios = card.querySelectorAll('input[type="radio"]');
+                    const groupName = radios[0].name;
+                    const isAnswered = Array.from(radios).some(radio => radio.checked);
+
+                    if (!isAnswered) {
+                        allAnswered = false;
+                    } else {
+                        const selectedValue = currentPageElement.querySelector(`input[name="${groupName}"]:checked`).value;
+                        answers[groupName] = parseInt(selectedValue);
+                    }
+                });
+
+                if (!allAnswered) {
+                    document.getElementById(`error-${currentPage}`).classList.add('show');
+                    return;
+                } else {
+                    document.getElementById(`error-${currentPage}`).classList.remove('show');
+                }
+            }
+
+            currentPage++;
+
+            if (currentPage === totalPages) {
+                showResults();
+            } else {
+                showPage(currentPage);
+                updateProgress();
+            }
+        }
+
+        function prevPage() {
+            if (currentPage > 1) {
+                currentPage--;
+                showPage(currentPage);
+                updateProgress();
+            }
+        }
+
+        function showResults() {
+            // Calculate scores
+            const scores = calculateScores();
+
+            // Display summary
+            displaySummary(scores);
+
+            // Display overall assessment
+            displayOverallAssessment(scores);
+
+            // Draw radar chart
+            drawRadarChart(scores);
+
+            // Display category results
+            displayCategoryResults(scores);
+
+            // Generate recommendations
+            generateRecommendations(scores);
+
+            showPage(totalPages);
+            document.getElementById('progressContainer').style.display = 'none';
+        }
+
+        function calculateScores() {
+            const scores = {
+                cx: {},
+                dx: {},
+                cxTotal: 0,
+                dxTotal: 0
+            };
+
+            // Calculate CX scores
+            assessmentData.cx.forEach(category => {
+                let categoryScore = 0;
+                category.questions.forEach((q, idx) => {
+                    const questionId = `${category.id}-q${idx}`;
+                    categoryScore += answers[questionId] || 0;
+                });
+                scores.cx[category.id] = (categoryScore / category.questions.length).toFixed(1);
+            });
+
+            // Calculate DX scores
+            assessmentData.dx.forEach(category => {
+                let categoryScore = 0;
+                category.questions.forEach((q, idx) => {
+                    const questionId = `${category.id}-q${idx}`;
+                    categoryScore += answers[questionId] || 0;
+                });
+                scores.dx[category.id] = (categoryScore / category.questions.length).toFixed(1);
+            });
+
+            // Calculate totals
+            scores.cxTotal = (Object.values(scores.cx).reduce((a, b) => parseFloat(a) + parseFloat(b), 0) / assessmentData.cx.length).toFixed(1);
+            scores.dxTotal = (Object.values(scores.dx).reduce((a, b) => parseFloat(a) + parseFloat(b), 0) / assessmentData.dx.length).toFixed(1);
+            scores.overall = ((parseFloat(scores.cxTotal) + parseFloat(scores.dxTotal)) / 2).toFixed(1);
+
+            return scores;
+        }
+
+        function getMaturityLevel(score) {
+            const s = parseFloat(score);
+            if (s >= 4.5) return '5단계: 최적화';
+            if (s >= 3.5) return '4단계: 관리';
+            if (s >= 2.5) return '3단계: 정의';
+            if (s >= 1.5) return '2단계: 발전';
+            return '1단계: 초기';
+        }
+
+        function displaySummary(scores) {
+            document.getElementById('result-cx-score').textContent = scores.cxTotal;
+            document.getElementById('result-cx-level').textContent = getMaturityLevel(scores.cxTotal);
+
+            document.getElementById('result-dx-score').textContent = scores.dxTotal;
+            document.getElementById('result-dx-level').textContent = getMaturityLevel(scores.dxTotal);
+
+            document.getElementById('result-overall-score').textContent = scores.overall;
+            document.getElementById('result-overall-level').textContent = getMaturityLevel(scores.overall);
+        }
+
+        function displayOverallAssessment(scores) {
+            const container = document.getElementById('overallAssessment');
+            const overallScore = parseFloat(scores.overall);
+            const cxScore = parseFloat(scores.cxTotal);
+            const dxScore = parseFloat(scores.dxTotal);
+            const level = getMaturityLevel(scores.overall);
+
+            let assessment = '';
+            let nextSteps = '';
+
+            // 성숙도 단계별 평가
+            if (overallScore >= 4.5) {
+                assessment = `<p><strong>축하합니다!</strong> 귀사는 CX/DX 분야에서 <strong>최고 수준의 성숙도</strong>를 보유하고 있습니다. 고객 경험과 디지털 전환이 조직 전반에 체계적으로 구축되어 있으며, 지속적인 최적화가 이루어지고 있습니다.</p>`;
+                nextSteps = `<p><strong>다음 단계:</strong> 업계 선도 기업으로서 혁신을 지속하고, 새로운 기술(생성형 AI, Web3 등)을 선제적으로 도입하며, 타 조직에 모범 사례를 공유하세요.</p>`;
+            } else if (overallScore >= 3.5) {
+                assessment = `<p><strong>우수합니다!</strong> 귀사는 CX/DX 분야에서 <strong>체계적인 관리 단계</strong>에 있습니다. 주요 프로세스가 표준화되어 있고, 성과 측정이 이루어지고 있습니다.</p>`;
+                nextSteps = `<p><strong>다음 단계:</strong> 데이터 기반 의사결정을 확대하고, AI/ML 활용을 강화하며, 조직 전반의 디지털 역량을 고도화하여 최적화 단계로 나아가세요.</p>`;
+            } else if (overallScore >= 2.5) {
+                assessment = `<p><strong>발전하고 있습니다.</strong> 귀사는 CX/DX 분야에서 <strong>정의 단계</strong>에 있습니다. 주요 프로세스가 문서화되기 시작했으며, 개선 활동이 진행 중입니다.</p>`;
+                nextSteps = `<p><strong>다음 단계:</strong> 표준 프로세스를 전사적으로 확산하고, 측정 체계를 구축하며, 디지털 도구 도입을 가속화하여 관리 단계로 발전하세요.</p>`;
+            } else if (overallScore >= 1.5) {
+                assessment = `<p><strong>시작 단계입니다.</strong> 귀사는 CX/DX 분야에서 <strong>발전 단계</strong>에 있습니다. 기본적인 체계가 마련되기 시작했으며, 개선의 필요성을 인식하고 있습니다.</p>`;
+                nextSteps = `<p><strong>다음 단계:</strong> 우선순위가 높은 영역부터 개선을 시작하고, 주요 프로세스를 정의·문서화하며, 전담 조직이나 책임자를 지정하여 정의 단계로 발전하세요.</p>`;
+            } else {
+                assessment = `<p><strong>개선 기회가 많습니다.</strong> 귀사는 CX/DX 분야에서 <strong>초기 단계</strong>에 있습니다. 체계적인 접근이 부족하지만, 이는 큰 개선 가능성을 의미합니다.</p>`;
+                nextSteps = `<p><strong>다음 단계:</strong> 경영진의 지원을 확보하고, 작은 프로젝트부터 시작하여 성공 사례를 만들며, 기본적인 데이터 수집과 고객 이해부터 시작하세요.</p>`;
+            }
+
+            // CX vs DX 비교 분석
+            let comparison = '';
+            const gap = Math.abs(cxScore - dxScore);
+            if (gap > 0.7) {
+                if (cxScore > dxScore) {
+                    comparison = `<p><strong>균형 분석:</strong> CX 성숙도(${cxScore})가 DX 성숙도(${dxScore})보다 높습니다. 고객 경험 관리는 잘하고 있지만, <strong>디지털 인프라와 기술 역량 강화가 필요</strong>합니다. 클라우드, 데이터 통합, 자동화 등에 투자하여 균형을 맞추세요.</p>`;
+                } else {
+                    comparison = `<p><strong>균형 분석:</strong> DX 성숙도(${dxScore})가 CX 성숙도(${cxScore})보다 높습니다. 기술 기반은 갖춰져 있지만, <strong>고객 중심 사고와 경험 관리 강화가 필요</strong>합니다. VOC 분석, 고객 여정 관리, 옴니채널 통합에 집중하세요.</p>`;
+                }
+            } else {
+                comparison = `<p><strong>균형 분석:</strong> CX 성숙도(${cxScore})와 DX 성숙도(${dxScore})가 균형있게 발전하고 있습니다. 이는 바람직한 상태이며, 양쪽 모두를 함께 발전시켜 나가세요.</p>`;
+            }
+
+            container.innerHTML = assessment + comparison + nextSteps;
+        }
+
+        function drawRadarChart(scores) {
+            const ctx = document.getElementById('radarChart').getContext('2d');
+
+            // Destroy existing chart if any
+            if (window.radarChartInstance) {
+                window.radarChartInstance.destroy();
+            }
+
+            const labels = [
+                ...assessmentData.cx.map(c => c.title),
+                ...assessmentData.dx.map(c => c.title)
+            ];
+
+            const data = [
+                ...assessmentData.cx.map(c => scores.cx[c.id]),
+                ...assessmentData.dx.map(c => scores.dx[c.id])
+            ];
+
+            window.radarChartInstance = new Chart(ctx, {
+                type: 'radar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: '성숙도 점수',
+                        data: data,
+                        fill: true,
+                        backgroundColor: 'rgba(102, 126, 234, 0.2)',
+                        borderColor: 'rgb(102, 126, 234)',
+                        pointBackgroundColor: 'rgb(102, 126, 234)',
+                        pointBorderColor: '#fff',
+                        pointHoverBackgroundColor: '#fff',
+                        pointHoverBorderColor: 'rgb(102, 126, 234)',
+                        pointRadius: 5,
+                        pointHoverRadius: 7
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        r: {
+                            beginAtZero: true,
+                            min: 0,
+                            max: 5,
+                            ticks: {
+                                stepSize: 1,
+                                font: {
+                                    size: 12
+                                }
+                            },
+                            pointLabels: {
+                                font: {
+                                    size: 11
+                                }
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            });
+        }
+
+        function displayCategoryResults(scores) {
+            const container = document.getElementById('categoryResults');
+            container.innerHTML = '<h3 style="grid-column: 1/-1; margin-bottom: 10px;">카테고리별 상세 점수</h3>';
+
+            [...assessmentData.cx, ...assessmentData.dx].forEach(category => {
+                const type = assessmentData.cx.includes(category) ? 'cx' : 'dx';
+                const score = scores[type][category.id];
+                const level = getMaturityLevel(score);
+
+                const card = document.createElement('div');
+                card.className = 'category-card';
+                card.innerHTML = `
+                    <h3>${category.title}</h3>
+                    <div class="category-score">${score}</div>
+                    <div class="category-level">${level}</div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function generateRecommendations(scores) {
+            const container = document.getElementById('recommendations');
+            const recommendations = [];
+
+            // Find weak areas
+            const allScores = [
+                ...assessmentData.cx.map(c => ({ ...c, type: 'CX', score: parseFloat(scores.cx[c.id]) })),
+                ...assessmentData.dx.map(c => ({ ...c, type: 'DX', score: parseFloat(scores.dx[c.id]) }))
+            ];
+
+            const sortedScores = allScores.sort((a, b) => a.score - b.score);
+            const weakAreas = sortedScores.slice(0, 3);
+
+            let html = '<h3>🎯 우선 개선 제안</h3>';
+            html += '<p style="color: #666; margin-bottom: 20px;">점수가 낮은 영역을 우선적으로 개선하시면 효과적입니다.</p>';
+
+            weakAreas.forEach((area, idx) => {
+                const recommendation = getRecommendation(area);
+                html += `
+                    <div class="recommendation-item">
+                        <h4>${idx + 1}. ${area.title} (현재: ${area.score}점)</h4>
+                        <p>${recommendation}</p>
+                    </div>
+                `;
+            });
+
+            container.innerHTML = html;
+        }
+
+        function getRecommendation(area) {
+            const recommendations = {
+                'cx-insight': '고객 설문조사나 인터뷰를 정기적으로 실시하고, 구매 데이터와 행동 데이터를 결합하여 고객 페르소나를 구체화하세요. Google Analytics, Mixpanel 등의 툴을 활용하면 효과적입니다.',
+                'cx-journey': '주요 고객 여정을 시각화하고, 각 접점에서 고객이 겪는 문제점을 파악하세요. Miro, Lucidchart 등으로 여정 맵을 만들고 정기적으로 업데이트하세요.',
+                'cx-omnichannel': 'CDP(Customer Data Platform) 도입을 검토하고, 온·오프라인 고객 데이터를 통합하세요. 채널 간 일관된 메시지와 프로모션을 제공하는 것이 중요합니다.',
+                'cx-data': 'VOC 수집 채널을 다양화(이메일, 챗봇, SNS, 콜센터)하고, 텍스트 분석 도구로 자동 분류하세요. 개선 과제는 우선순위를 정해 실행하고 결과를 측정하세요.',
+                'cx-organization': 'CX 전담 조직을 신설하거나 책임자를 지정하고, NPS/CSAT 등 핵심 지표를 월별로 측정하세요. 전 직원 대상 고객 중심 문화 교육을 정기적으로 실시하세요.',
+                'dx-infrastructure': '클라우드 전환 로드맵을 수립하고, AWS/Azure/GCP 등 주요 플랫폼 중 선택하여 단계적으로 마이그레이션하세요. API Gateway를 구축해 시스템 간 연동을 표준화하세요.',
+                'dx-data-mgmt': '데이터 웨어하우스나 데이터 레이크를 구축하여 데이터를 통합하고, Tableau, Power BI 등 BI 도구로 대시보드를 만드세요. 데이터 거버넌스 정책도 함께 수립하세요.',
+                'dx-automation': 'UiPath, Automation Anywhere 등 RPA 도구로 반복 업무를 자동화하고, 챗봇으로 자주 묻는 질문에 자동 응답하세요. 비즈니스 프로세스를 먼저 최적화한 후 자동화하세요.',
+                'dx-ai': 'AI 추천 엔진을 도입해 개인화 서비스를 제공하고, 예측 모델로 수요를 예측하거나 이탈 고객을 사전에 식별하세요. 클라우드 AI 서비스(AWS SageMaker, Google AI Platform)를 활용하면 빠르게 시작할 수 있습니다.',
+                'dx-collaboration': 'Microsoft Teams, Slack, Notion 등 협업 도구를 도입하고, 문서는 Google Workspace나 Office 365로 클라우드 기반 공동 작업을 하세요. 원격 근무 정책과 보안 체계도 함께 구축하세요.'
+            };
+
+            return recommendations[area.id] || '전문가와 상담하여 구체적인 개선 계획을 수립하시기 바랍니다.';
+        }
+
+        function restartAssessment() {
+            currentPage = 0;
+            answers = {};
+            showPage(0);
+            document.getElementById('progressContainer').style.display = 'none';
+
+            // Reset all radio buttons
+            document.querySelectorAll('input[type="radio"]').forEach(radio => {
+                radio.checked = false;
+            });
+        }
+
+        // Initialize on load
+        init();
+    </script>
+</body>
+</html>
